@@ -1,10 +1,7 @@
-# Use the official Jenkins agent base image
-FROM jenkins/agent:latest
+FROM jenkins/inbound-agent:latest
 
-# Set the user to root to install additional packages
 USER root
 
-# Install required packages and Docker CLI
 RUN apt-get update && \
     apt-get install -y \
     apt-transport-https \
@@ -26,4 +23,4 @@ RUN usermod -aG docker jenkins
 USER jenkins
 
 # Specify the entrypoint script for the Jenkins agent
-ENTRYPOINT ["/usr/local/bin/jenkins-agent"]
+# ENTRYPOINT ["/usr/local/bin/jenkins-agent"]
