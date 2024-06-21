@@ -25,16 +25,10 @@ RUN usermod -aG docker jenkins
 RUN usermod -aG sudo jenkins
 RUN echo "jenkins ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Create an entrypoint script to set permissions on the Docker socket
+# Create an entrypoint script to set permissions on the Docker socket and workspace
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 USER jenkins
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
-# Specify the entrypoint script for the Jenkins agent
-# ENTRYPOINT ["/usr/local/bin/jenkins-agent"]
-# docker build -t dublok/jenkins-agent:dev .
-# docker push dublok/jenkins-agent:dev
-# single command: docker build -t dublok/jenkins-agent:dev . && docker push dublok/jenkins-agent:dev
