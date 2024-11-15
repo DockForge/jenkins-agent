@@ -2,33 +2,28 @@ FROM jenkins/inbound-agent:latest
 
 USER root
 
+# Update and install essential packages
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y gnupg2 lsb-release sudo
+RUN apt-get install -y gnupg2 lsb-release sudo curl iptables iproute2 kmod
 
-# Download the GPG key and save it to /usr/share/keyrings/
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+# Install Docker Engine (client and daemon)
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+RUN echo "deb [arch=amd64] https://download.docker.com/linux/debian buster stable" > /etc/apt/sources.list.d/docker.list
+RUN apt-get update && apt-get install -y docker-ce
 
-# Add the Docker repository to your sources list (replace 'buster' with your actual codename)
-RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian buster stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# Update the package index
-RUN apt-get update
-
-# Install Docker CLI
-RUN apt-get install -y docker-ce-cli
-
-# Add Docker group and add Jenkins user to it
-RUN groupadd -g 993 docker || true
+# Add Jenkins user to the docker group and set permissions
 RUN usermod -aG docker jenkins
-
-# Grant Jenkins user sudo privileges without a password
-RUN usermod -aG sudo jenkins
 RUN echo "jenkins ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Create an entrypoint script to set permissions on the Docker socket and workspace
+# Copy and set permissions for the entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# Ensure necessary kernel modules are loaded
+RUN modprobe br_netfilter || true
+RUN modprobe overlay || true
+
+# Switch to jenkins user
 USER jenkins
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
